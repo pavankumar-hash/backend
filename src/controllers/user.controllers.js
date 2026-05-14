@@ -5,20 +5,19 @@ import { uploadCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 const registerUser = asyncHandler(async (req, res) => {
-  const { fullName, email, username, password } = req.body;
-  console.log("Email :", email);
-
+  const { fullName, email, userName, password } = req.body;
+  console.log(req.body);
   if (
-    [fullName, email, username, password].some((field) => field?.trim() === "")
+    [fullName, email, userName, password].some((field) => field?.trim() === "")
   ) {
     throw new ApiError(400, "All Fields are required");
   }
 
-  const existedUser = User.findOne({
-    $or: [{ username }, { email }],
+  const existedUser = await User.findOne({
+    $or: [{ userName }, { email }],
   });
   if (existedUser) {
-    throw new ApiError(409, "User with email or username already exists");
+    throw new ApiError(409, "User with email or userName already exists");
   }
 
   const avatarLocalPath = req.files?.avatar[0]?.path;
@@ -40,7 +39,7 @@ const registerUser = asyncHandler(async (req, res) => {
     coverImage: coverImage?.url || "",
     email,
     password,
-    username: username.toLowerCase(),
+    userName,
   });
   const createUser = await User.findById(user._id).select(
     "-password -refreshToken"
