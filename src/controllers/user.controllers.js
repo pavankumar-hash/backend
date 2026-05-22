@@ -81,12 +81,13 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  const { username, email, password } = req.body;
-  if (!username || !email) {
+  const { userName, email, password } = req.body;
+  console.log(req.body);
+  if (!(userName || email)) {
     throw new ApiError(400, "username and email is required");
   }
   const user = await User.findOne({
-    $or: [{ username }, { email }],
+    $or: [{ userName }, { email }],
   });
   if (!user) {
     throw new ApiError(404, "User does not exist");
@@ -99,7 +100,7 @@ const loginUser = asyncHandler(async (req, res) => {
     user._id
   );
   const loggedInUser = await User.findById(user._id).select(
-    "-password refreshToken"
+    "-password -refreshToken"
   );
   const options = {
     httpOnly: true,
@@ -107,8 +108,8 @@ const loginUser = asyncHandler(async (req, res) => {
   };
   return res
     .status(200)
-    .cookie("accessToken", options)
-    .cookie("refreshToken", options)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
     .json(
       new ApiResponse(
         200,
@@ -117,7 +118,6 @@ const loginUser = asyncHandler(async (req, res) => {
       )
     );
 });
-
 const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
